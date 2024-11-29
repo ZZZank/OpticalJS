@@ -64,3 +64,17 @@ mandatory = true
 versionRange = "[${minecraft_version},)"
 ordering = "NONE"
 side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "kubejs"
+mandatory = true
+versionRange = "[${kubejs_version},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "create_optical"
+mandatory = true
+versionRange = "[0.2.1,)"
+ordering = "NONE"
+side = "BOTH"

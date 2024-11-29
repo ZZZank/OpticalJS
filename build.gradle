@@ -173,7 +173,8 @@ processResources {
             "mod_display_name": propertyString('mod_display_name'),
             "mod_author": propertyString('mod_author'),
             "minecraft_version": propertyString('minecraft_version'),
-            "resource_pack_format": propertyString('resource_pack_format')
+            "resource_pack_format": propertyString('resource_pack_format'),
+            "kubejs_version": propertyString('kubejs_version')
         )
     }
 }

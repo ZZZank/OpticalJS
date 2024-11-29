@@ -23,10 +23,19 @@ repositories {
             includeGroup 'maven.modrinth'
         }
     }
+    maven {
+        // saps.dev Maven (KubeJS and Rhino)
+        url = "https://maven.saps.dev/minecraft"
+        content {
+            includeGroup "dev.latvian.mods"
+        }
+    }
     mavenLocal() // Must be last for caching to work
 }
 
 dependencies {
+    modImplementation("curse.maven:create-optical-1007714:5750406")
+    modImplementation("dev.latvian.mods:kubejs-forge:${kubejs_version}")
     // additional dependencies can be specified using loom's regular format
     // specifying a "mod" dependency (like modImplementation or modApi)
     // will cause loom to remap the file to your specified mappings
