@@ -30,11 +30,25 @@ repositories {
             includeGroup "dev.latvian.mods"
         }
     }
+    maven {
+        url "https://maven.tterrag.com/"
+        content {
+            includeGroup "com.simibubi.create"
+            includeGroup "com.jozufozu.flywheel"
+            includeGroup "com.tterrag.registrate"
+        }
+    }
     mavenLocal() // Must be last for caching to work
 }
 
 dependencies {
     modImplementation("curse.maven:create-optical-1007714:5750406")
+    modApi("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") {
+        transitive = false // transitive jei and cc tweaked dependencies leaking through 😍
+    }
+    modApi("com.jozufozu.flywheel:flywheel-forge-${minecraft_version}:${flywheel_version}")
+    modApi("com.tterrag.registrate:Registrate:${registrate_version}")
+
     modImplementation("dev.latvian.mods:kubejs-forge:${kubejs_version}")
     // additional dependencies can be specified using loom's regular format
     // specifying a "mod" dependency (like modImplementation or modApi)
