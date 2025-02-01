@@ -24,10 +24,8 @@ public class OpticalJSKubeJSPlugin extends KubeJSPlugin {
                 ItemComponents.OUTPUT_ARRAY.key("results"),
                 ItemComponents.INPUT_ARRAY.key("ingredients"),
                 TimeComponent.TICKS.key("processingTime").optional(40L),
-                NumberComponent.INT.min(0)
-                    .max(FocusingRecipeParams.BeamTypeCondition.values().length - 1)
+                new IndexableEnumComponent<>(FocusingRecipeParams.BeamTypeCondition.class)
                     .key("required_beam_type")
-                    .optional(FocusingRecipeParams.BeamTypeCondition.NONE.getId())
             )
         );
     }

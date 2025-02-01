@@ -42,7 +42,8 @@ repositories {
 }
 
 dependencies {
-    modImplementation("curse.maven:create-optical-1007714:5750406")
+    modImplementation("curse.maven:create-optical-1007714:6119065")
+
     modApi("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") {
         transitive = false // transitive jei and cc tweaked dependencies leaking through 😍
     }
