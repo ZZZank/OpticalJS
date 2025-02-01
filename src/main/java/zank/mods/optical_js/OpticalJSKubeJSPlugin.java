@@ -26,6 +26,7 @@ public class OpticalJSKubeJSPlugin extends KubeJSPlugin {
                 TimeComponent.TICKS.key("processingTime").optional(40L),
                 new IndexableEnumComponent<>(FocusingRecipeParams.BeamTypeCondition.class)
                     .key("required_beam_type")
+                    .optional(FocusingRecipeParams.BeamTypeCondition.NONE)
             )
         );
     }
