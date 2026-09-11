@@ -41,7 +41,8 @@ jobs:
 
       - name: publish
         if: ${{ inputs.publish }}
-        run: ./gradlew publishMod
+        # TODO: remove '--no-configuration-cache' when modpublisher supports it
+        run: ./gradlew publishMod --no-configuration-cache
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSE_TOKEN: ${{ secrets.CURSE_TOKEN }}
