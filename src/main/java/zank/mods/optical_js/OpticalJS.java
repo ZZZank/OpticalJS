@@ -1,8 +1,7 @@
 package zank.mods.optical_js;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.fml.common.Mod;
 
 /**
  * @author ZZZank
@@ -10,7 +9,8 @@ import net.minecraftforge.fml.common.Mod;
 @Mod(OpticalJS.MOD_ID)
 public class OpticalJS {
     public static final String MOD_ID = "optical_js";
-    public static final Gson GSON = new GsonBuilder()
-        .setLenient()
-        .create();
+
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    }
 }

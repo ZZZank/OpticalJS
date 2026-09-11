@@ -1,115 +1,110 @@
 package zank.mods.optical_js;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonPrimitive;
-import dev.latvian.mods.kubejs.recipe.RecipeExceptionJS;
-import dev.latvian.mods.kubejs.recipe.RecipeJS;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import dev.latvian.mods.kubejs.recipe.RecipeScriptContext;
 import dev.latvian.mods.kubejs.recipe.component.RecipeComponent;
-import dev.latvian.mods.kubejs.typings.desc.DescriptionContext;
-import dev.latvian.mods.kubejs.typings.desc.PrimitiveDescJS;
-import dev.latvian.mods.kubejs.typings.desc.TypeDescJS;
-import dev.latvian.mods.kubejs.util.UtilsJS;
-import lombok.val;
+import dev.latvian.mods.kubejs.recipe.component.RecipeComponentType;
+import dev.latvian.mods.kubejs.recipe.component.UniqueIdBuilder;
+import dev.latvian.mods.kubejs.util.OpsContainer;
+import dev.latvian.mods.rhino.type.TypeInfo;
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Locale;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
- * receive integer and string but only write string
+ * Accepts an enum as its index, as its (case-insensitive) name, or as the enum value itself,
+ * but always writes it back as its index.
+ * <p>
+ * Create Optical serializes its beam type as an index ({@code mode}), so a plain
+ * {@code EnumComponent} - which only knows about names - cannot be used for it.
  *
  * @author ZZZank
  */
-public record IndexableEnumComponent<T extends Enum<T>>(
-    Class<T> type,
-    Function<T, JsonPrimitive> toJson,
-    BiFunction<Class<T>, JsonPrimitive, T> fromJson
-) implements RecipeComponent<T> {
-    public IndexableEnumComponent(Class<T> enumType) {
-        this(enumType, defaultToJson(), defaultFromJson());
+public final class IndexableEnumComponent<T extends Enum<T>> implements RecipeComponent<T> {
+    public static <T extends Enum<T>> RecipeComponentType<T> of(ResourceLocation id, Class<T> enumClass) {
+        return RecipeComponentType.unit(id, type -> new IndexableEnumComponent<>(type, enumClass));
     }
 
-    private static final Function<Enum<?>, JsonPrimitive> DEFAULT_TO_JSON =
-        e -> new JsonPrimitive(e.name().toLowerCase(Locale.ROOT));
+    private final RecipeComponentType<?> type;
+    private final Class<T> enumClass;
+    private final T[] constants;
+    private final Codec<T> codec;
+    private final TypeInfo typeInfo;
 
-    public static <T extends Enum<T>> Function<T, JsonPrimitive> defaultToJson() {
-        return UtilsJS.cast(DEFAULT_TO_JSON);
-    }
-
-    private static final BiFunction<Class<? extends Enum<?>>, JsonPrimitive, Enum<?>> DEFAULT_FROM_JSON =
-        (type, json) -> {
-            if (json.isNumber()) {
-                val index = json.getAsInt();
-                val constants = type.getEnumConstants();
-                if (index >= 0 && index < constants.length) {
-                    return constants[index];
-                }
-            } else if (json.isString()) {
-                val name = json.getAsString();
-                for (val e : type.getEnumConstants()) {
-                    if (e.name().equalsIgnoreCase(name)) {
-                        return e;
-                    }
-                }
-            }
-            return null;
-        };
-
-    public static <T extends Enum<T>> BiFunction<Class<T>, JsonPrimitive, T> defaultFromJson() {
-        return UtilsJS.cast(DEFAULT_FROM_JSON);
+    private IndexableEnumComponent(RecipeComponentType<?> type, Class<T> enumClass) {
+        this.type = type;
+        this.enumClass = enumClass;
+        this.constants = enumClass.getEnumConstants();
+        this.codec = Codec.INT.comapFlatMap(this::byIndex, Enum::ordinal);
+        this.typeInfo = TypeInfo.of(enumClass);
     }
 
     @Override
-    public Class<?> componentClass() {
+    public RecipeComponentType<?> type() {
         return type;
     }
 
     @Override
-    public JsonElement write(RecipeJS recipe, T value) {
-        return toJson.apply(value);
+    public Codec<T> codec() {
+        return codec;
     }
 
     @Override
-    public T read(RecipeJS recipe, Object from) {
-        if (type.isInstance(from)) {
-            return (T) from;
-        }
-        if (from == null) {
-            return null;
-        }
-        val e = fromJson.apply(type, obj2Primitive(from));
-
-        if (e == null) {
-            throw new RecipeExceptionJS("Enum value '%s' of %s not found".formatted(from, type.getName()));
-        }
-
-        return e;
-    }
-
-    public static JsonPrimitive obj2Primitive(Object from) {
-        if (from instanceof JsonPrimitive p) {
-            return p;
-        } else if (from instanceof Number n) {
-            return new JsonPrimitive(n);
-        }
-        return new JsonPrimitive(String.valueOf(from));
+    public TypeInfo typeInfo() {
+        return typeInfo;
     }
 
     @Override
-    public TypeDescJS constructorDescription(DescriptionContext ctx) {
-        val constants = type.getEnumConstants();
-        val descAll = Stream.concat(
-                IntStream.range(0, constants.length).boxed(),
-                Arrays.stream(constants)
-                    .map(Enum::name)
-                    .map(e -> e.toLowerCase(Locale.ROOT))
-            )
-            .map(OpticalJS.GSON::toJson)
-            .map(PrimitiveDescJS::new)
-            .toArray(TypeDescJS[]::new);
-        return TypeDescJS.any(descAll);
+    public T wrap(RecipeScriptContext cx, Object from) {
+        return switch (from) {
+            case null -> null;
+            case Number n -> byIndexOrThrow(n.intValue());
+            case CharSequence s -> byNameOrThrow(s.toString());
+            case Enum<?> e when enumClass.isInstance(e) -> enumClass.cast(e);
+            default -> byNameOrThrow(String.valueOf(from));
+        };
+    }
+
+    @Override
+    public void buildUniqueId(UniqueIdBuilder builder, T value) {
+        builder.append(value.name().toLowerCase(Locale.ROOT));
+    }
+
+    @Override
+    public String toString(OpsContainer ops, T value) {
+        return "'" + value.name().toLowerCase(Locale.ROOT) + "'";
+    }
+
+    @Override
+    public String toString() {
+        return type.toString();
+    }
+
+    private DataResult<T> byIndex(int index) {
+        return index >= 0 && index < constants.length
+            ? DataResult.success(constants[index])
+            : DataResult.error(() -> outOfBounds(index));
+    }
+
+    private T byIndexOrThrow(int index) {
+        if (index < 0 || index >= constants.length) {
+            throw new IllegalArgumentException(outOfBounds(index));
+        }
+        return constants[index];
+    }
+
+    private String outOfBounds(int index) {
+        return "Index " + index + " is out of bounds for enum " + enumClass.getName();
+    }
+
+    private T byNameOrThrow(@Nullable String name) {
+        for (var constant : constants) {
+            if (constant.name().equalsIgnoreCase(name)) {
+                return constant;
+            }
+        }
+        throw new IllegalArgumentException("Enum value '%s' of %s not found".formatted(name, enumClass.getName()));
     }
 }

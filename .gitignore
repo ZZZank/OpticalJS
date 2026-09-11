@@ -31,3 +31,13 @@ bin/
 # fabric
 
 run/
+
+# AI
+/CLAUDE.md
+/AGENTS.md
+/.claude/
+/.cursor/
+/.continue/
+/.codex/
+/.cline/
+/.copilot/

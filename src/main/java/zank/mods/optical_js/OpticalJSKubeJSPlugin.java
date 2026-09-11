@@ -1,32 +1,39 @@
 package zank.mods.optical_js;
 
-import dev.latvian.mods.kubejs.KubeJSPlugin;
-import dev.latvian.mods.kubejs.recipe.component.ItemComponents;
-import dev.latvian.mods.kubejs.recipe.component.NumberComponent;
+import dev.latvian.mods.kubejs.plugin.KubeJSPlugin;
+import dev.latvian.mods.kubejs.recipe.component.IngredientComponent;
+import dev.latvian.mods.kubejs.recipe.component.RecipeComponentTypeRegistry;
 import dev.latvian.mods.kubejs.recipe.component.TimeComponent;
 import dev.latvian.mods.kubejs.recipe.schema.RecipeSchema;
-import dev.latvian.mods.kubejs.recipe.schema.RegisterRecipeSchemasEvent;
+import dev.latvian.mods.kubejs.recipe.schema.RecipeSchemaRegistry;
+import dev.latvian.mods.kubejs.util.TickDuration;
 import net.lpcamors.optical.CORecipeTypes;
-import net.lpcamors.optical.recipes.FocusingRecipeParams;
+import net.lpcamors.optical.recipes.FocusingRecipeParams.BeamTypeCondition;
 
 /**
  * @author ZZZank
  */
-public class OpticalJSKubeJSPlugin extends KubeJSPlugin {
+public class OpticalJSKubeJSPlugin implements KubeJSPlugin {
 
     @Override
-    public void registerRecipeSchemas(RegisterRecipeSchemasEvent event) {
-        event.register(
+    public void registerRecipeComponents(RecipeComponentTypeRegistry registry) {
+        registry.register(OpticalRecipeComponents.PROCESSING_OUTPUT);
+        registry.register(OpticalRecipeComponents.BEAM_TYPE);
+    }
+
+    @Override
+    public void registerRecipeSchemas(RecipeSchemaRegistry registry) {
+        registry.register(
             CORecipeTypes.FOCUSING.getId(),
             new RecipeSchema(
-                FocusingRecipeJS.class,
-                FocusingRecipeJS::new,
-                ItemComponents.OUTPUT_ARRAY.key("results"),
-                ItemComponents.INPUT_ARRAY.key("ingredients"),
-                TimeComponent.TICKS.key("processingTime").optional(40L),
-                new IndexableEnumComponent<>(FocusingRecipeParams.BeamTypeCondition.class)
-                    .key("required_beam_type")
-                    .optional(FocusingRecipeParams.BeamTypeCondition.NONE)
+                OpticalRecipeComponents.PROCESSING_OUTPUT.instance().asList().outputKey("results"),
+                IngredientComponent.INGREDIENT.instance().asList().inputKey("ingredients"),
+                TimeComponent.TICKS.otherKey("processing_time").optional(TickDuration.of(40L)),
+                // alwaysWrite, because Create Optical's own codec falls back to RADIO (index 0)
+                // when "mode" is missing, while every other default in that mod is NONE (index 4)
+                OpticalRecipeComponents.BEAM_TYPE.otherKey("mode")
+                    .optional(BeamTypeCondition.NONE)
+                    .alwaysWrite()
             )
         );
     }
