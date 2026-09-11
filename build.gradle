@@ -1,3 +1,5 @@
+import com.hypherionmc.modpublisher.properties.ReleaseType
+
 import java.util.function.BiConsumer
 
 plugins {
@@ -235,6 +237,7 @@ publisher {
     // Enable Debug mode. When enabled, no files will actually be uploaded
     debug.set(false)
 
+    releaseType = ReleaseType.BETA
     changelog.set(rootProject.file("CHANGELOG.md"))
     projectVersion.set(mod_version)
     // Example: 1.2.3 for 1.20.1 forge
